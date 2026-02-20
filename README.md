@@ -30,7 +30,7 @@ The `FloatingActionButton.onPressed` callback is intentionally empty — only th
 
 ## Screen Recording
 
-<video src="documentation/ScreenRecording.mov" controls width="80%"></video>
+<video src="documentation/ScreenRecording.mp4" controls width="80%"></video>
 
 ## Expected Behavior
 
