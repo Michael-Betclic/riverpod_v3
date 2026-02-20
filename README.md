@@ -1,16 +1,41 @@
-# riverpod_v3
+# Riverpod V3 — ProviderScope + LayoutBuilder Rebuild Issue
 
-A new Flutter project.
+This repository demonstrates an unintended rebuild behavior in **Riverpod V3** (`flutter_riverpod: ^3.1.0`).
 
-## Getting Started
+## The Problem
 
-This project is a starting point for a Flutter application.
+When a `ProviderScope` is placed as a child of a `LayoutBuilder`, **all elements inside the `LayoutBuilder` are rebuilt** whenever the parent widget tree changes — even if there is no interaction with those elements.
 
-A few resources to get you started if this is your first Flutter project:
+For example, tapping the FloatingActionButton (which performs no state change at all) triggers a ripple animation that causes the parent tree to rebuild. This in turn causes every `ProviderScope` nested under a `LayoutBuilder` to be fully rebuilt, leading to unnecessary work.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## How to Reproduce
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Run the app.
+2. Tap the FloatingActionButton — it intentionally does **nothing** (no counter increment, no state change).
+3. Observe that the green containers inside the `ListView` (each wrapped in `LayoutBuilder` > `ProviderScope`) are rebuilt despite having no reason to.
+
+## Code Structure
+
+The key widget hierarchy in `lib/main.dart`:
+
+```
+ListView.builder
+  └── Container (blue)
+        └── LayoutBuilder
+              └── ProviderScope   ← triggers unnecessary rebuilds
+                    └── Container (green)
+```
+
+The `FloatingActionButton.onPressed` callback is intentionally empty — only the ripple animation's repaint is enough to trigger the issue.
+
+## Screen Recording
+
+<video src="documentation/ScreenRecording.mov" controls width="80%"></video>
+
+## Expected Behavior
+
+Widgets inside the `LayoutBuilder` / `ProviderScope` should **not** rebuild when the parent tree changes if their constraints and dependencies have not changed.
+
+## Actual Behavior
+
+Every `ProviderScope` under a `LayoutBuilder` is rebuilt on any parent tree change, causing unnecessary rebuilds across the entire list.
